@@ -73,7 +73,7 @@ func (c *ValidateCommand) Run(rawArgs []string) int {
 
 func (c *ValidateCommand) GatherVariables(args *arguments.Vars) {
 	// FIXME the arguments package currently trivially gathers variable related
-	// arguments in a heterogenous slice, in order to minimize the number of
+	// arguments in a heterogeneous slice, in order to minimize the number of
 	// code paths gathering variables during the transition to this structure.
 	// Once all commands that gather variables have been converted to this
 	// structure, we could move the variable gathering code to the arguments
@@ -195,6 +195,18 @@ Usage: tofu [global options] validate [options]
   command instead, which includes an implied validation check.
 
 Options:
+
+  -compact-warnings     If OpenTofu produces any warnings that are not
+                        accompanied by errors, show them in a more compact
+                        form that includes only the summary messages.
+
+  -consolidate-warnings If OpenTofu produces any warnings, no consolodation
+                        will be performed. All locations, for all warnings
+                        will be listed. Enabled by default.
+
+  -consolidate-errors   If OpenTofu produces any errors, no consolodation
+                        will be performed. All locations, for all errors
+                        will be listed. Disabled by default
 
   -json                 Produce output in a machine-readable JSON format, 
                         suitable for use in text editor integrations and other 

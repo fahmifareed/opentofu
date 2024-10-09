@@ -13,6 +13,7 @@ import (
 	"github.com/opentofu/opentofu/internal/addrs"
 	"github.com/opentofu/opentofu/internal/configs/configschema"
 	"github.com/opentofu/opentofu/internal/lang"
+	"github.com/opentofu/opentofu/internal/lang/marks"
 	"github.com/zclconf/go-cty/cty"
 )
 
@@ -36,7 +37,7 @@ func decodeBackendBlock(block *hcl.Block) (*Backend, hcl.Diagnostics) {
 	}, nil
 }
 
-// Hash produces a hash value for the reciever that covers the type and the
+// Hash produces a hash value for the receiver that covers the type and the
 // portions of the config that conform to the given schema.
 //
 // If the config does not conform to the schema then the result is not
@@ -62,6 +63,15 @@ func (b *Backend) Hash(schema *configschema.Block) (int, hcl.Diagnostics) {
 		val = cty.UnknownVal(schema.ImpliedType())
 	}
 
+	if marks.Contains(val, marks.Sensitive) {
+		return -1, diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Backend config contains sensitive values",
+			Detail:   "The backend configuration is stored in .terraform/terraform.tfstate as well as plan files. It is recommended to instead supply sensitive credentials via backend specific environment variables",
+			Subject:  b.DeclRange.Ptr(),
+		})
+	}
+
 	toHash := cty.TupleVal([]cty.Value{
 		cty.StringVal(b.Type),
 		val,
@@ -78,7 +88,7 @@ func (b *Backend) Decode(schema *configschema.Block) (cty.Value, hcl.Diagnostics
 	})
 }
 
-// This is a hack that may not be needed, but preserves the idea that invalid backends will show a cryptic error about running init duing plan/apply startup.
+// This is a hack that may not be needed, but preserves the idea that invalid backends will show a cryptic error about running init during plan/apply startup.
 func (b *Backend) referenceDiagnostics(schema *configschema.Block) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 

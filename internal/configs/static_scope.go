@@ -16,6 +16,7 @@ import (
 	"github.com/opentofu/opentofu/internal/addrs"
 	"github.com/opentofu/opentofu/internal/didyoumean"
 	"github.com/opentofu/opentofu/internal/lang"
+	"github.com/opentofu/opentofu/internal/lang/marks"
 	"github.com/opentofu/opentofu/internal/tfdiags"
 )
 
@@ -157,7 +158,7 @@ func (s staticScopeData) GetModule(addrs.ModuleCall, tfdiags.SourceRange) (cty.V
 }
 
 func (s staticScopeData) GetPathAttr(addr addrs.PathAttr, rng tfdiags.SourceRange) (cty.Value, tfdiags.Diagnostics) {
-	// TODO this is copied and trimed down from tofu/evaluate.go GetPathAttr.  Ideally this should be refactored to a common location.
+	// TODO this is copied and trimmed down from tofu/evaluate.go GetPathAttr.  Ideally this should be refactored to a common location.
 	var diags tfdiags.Diagnostics
 	switch addr.Name {
 	case "cwd":
@@ -206,7 +207,7 @@ func (s staticScopeData) GetPathAttr(addr addrs.PathAttr, rng tfdiags.SourceRang
 }
 
 func (s staticScopeData) GetTerraformAttr(addr addrs.TerraformAttr, rng tfdiags.SourceRange) (cty.Value, tfdiags.Diagnostics) {
-	// TODO this is copied and trimed down from tofu/evaluate.go GetTerraformAttr.  Ideally this should be refactored to a common location.
+	// TODO this is copied and trimmed down from tofu/evaluate.go GetTerraformAttr.  Ideally this should be refactored to a common location.
 	var diags tfdiags.Diagnostics
 	switch addr.Name {
 	case "workspace":
@@ -256,6 +257,9 @@ func (s staticScopeData) GetInputVariable(ident addrs.InputVariable, rng tfdiags
 	}
 
 	val, valDiags := s.eval.call.vars(variable)
+	if variable.Sensitive {
+		val = val.Mark(marks.Sensitive)
+	}
 	return val, s.enhanceDiagnostics(id, diags.Append(valDiags))
 }
 

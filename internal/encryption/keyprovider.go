@@ -14,6 +14,7 @@ import (
 	"github.com/opentofu/opentofu/internal/configs"
 	"github.com/opentofu/opentofu/internal/encryption/config"
 	"github.com/opentofu/opentofu/internal/lang"
+	"github.com/opentofu/opentofu/internal/lang/marks"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
@@ -57,7 +58,7 @@ func (e *targetBuilder) setupKeyProvider(cfg config.KeyProviderConfig, stack []c
 	}
 
 	// Mark this key provider as partially handled.  This value will be replaced below once it is actually known.
-	// The goal is to allow an early return via the above if statement to prevent duplicate errors if errors are encoutered in the key loading stack.
+	// The goal is to allow an early return via the above if statement to prevent duplicate errors if errors are encountered in the key loading stack.
 	e.keyValues[cfg.Type][cfg.Name] = cty.UnknownVal(cty.DynamicPseudoType)
 
 	// Check for circular references, this is done by inspecting the stack of key providers
@@ -127,15 +128,27 @@ func (e *targetBuilder) setupKeyProvider(cfg config.KeyProviderConfig, stack []c
 			continue
 		}
 
-		// TODO this should be more defensive
+		// This will always be a TraverseRoot, panic is OK if that's not the case
 		depRoot := (dep[0].(hcl.TraverseRoot)).Name
-		depType := (dep[1].(hcl.TraverseAttr)).Name
-		depName := (dep[2].(hcl.TraverseAttr)).Name
-
 		if depRoot != "key_provider" {
 			nonKeyProviderDeps = append(nonKeyProviderDeps, dep)
 			continue
 		}
+		depTypeAttr, typeOk := dep[1].(hcl.TraverseAttr)
+		depNameAttr, nameOk := dep[2].(hcl.TraverseAttr)
+
+		if !typeOk || !nameOk {
+			diags = append(diags, &hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "Invalid Key Provider expression format",
+				Detail:   "Expected key_provider.<type>.<name>",
+				Subject:  dep.SourceRange().Ptr(),
+			})
+			continue
+		}
+
+		depType := depTypeAttr.Name
+		depName := depNameAttr.Name
 
 		kpc, ok := e.cfg.GetKeyProvider(depType, depName)
 		if !ok {
@@ -173,6 +186,14 @@ func (e *targetBuilder) setupKeyProvider(cfg config.KeyProviderConfig, stack []c
 	diags = append(diags, evalDiags...)
 	if diags.HasErrors() {
 		return diags
+	}
+
+	// gohcl does not handle marks, we need to remove the sensitive marks from any input variables
+	// We assume that the entire configuration in the encryption block should be treated as sensitive
+	for key, sv := range evalCtx.Variables {
+		if marks.Contains(sv, marks.Sensitive) {
+			evalCtx.Variables[key], _ = sv.UnmarkDeep()
+		}
 	}
 
 	// Initialize the Key Provider

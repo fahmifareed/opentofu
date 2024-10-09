@@ -182,7 +182,7 @@ func (c *PlanCommand) OperationRequest(
 
 func (c *PlanCommand) GatherVariables(args *arguments.Vars) {
 	// FIXME the arguments package currently trivially gathers variable related
-	// arguments in a heterogenous slice, in order to minimize the number of
+	// arguments in a heterogeneous slice, in order to minimize the number of
 	// code paths gathering variables during the transition to this structure.
 	// Once all commands that gather variables have been converted to this
 	// structure, we could move the variable gathering code to the arguments
@@ -254,6 +254,14 @@ Other Options:
   -compact-warnings          If OpenTofu produces any warnings that are not
                              accompanied by errors, shows them in a more compact
                              form that includes only the summary messages.
+
+  -consolidate-warnings      If OpenTofu produces any warnings, no consolodation
+                             will be performed. All locations, for all warnings
+                             will be listed. Enabled by default.
+
+  -consolidate-errors        If OpenTofu produces any errors, no consolodation
+                             will be performed. All locations, for all errors
+                             will be listed. Disabled by default
 
   -detailed-exitcode         Return detailed exit codes when the command exits.
                              This will change the meaning of exit codes to:

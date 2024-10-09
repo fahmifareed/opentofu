@@ -8,6 +8,49 @@ The Technical Steering Committee is a group comprised of people from companies a
 - Wojciech Barczynski ([@wojciech12](https://github.com/wojciech12)) representing Spacelift Inc.
 - Zach Goldberg ([@ZachGoldberg](https://github.com/ZachGoldberg)) representing Gruntwork, Inc.
 
+## 2024-10-01
+
+### Attendees
+
+- Christan Mesh ([@cam72cam](https://github.com/cam72cam)) (OpenTofu Tech Lead)
+- Roger Simms ([@allofthesepeople](https://github.com/allofthesepeople))
+- Igor Savchenko ([@DiscyDel](https://github.com/DicsyDel))
+- Yousif Akbar ([@yhakbar](https://github.com/yhakbar)) (On behalf of Zach Goldberg)
+
+### Agenda
+
+#### Static Evaluation Sensitivity Bug
+
+- Christian: I'm working on a draft to report a security issue with static evaluation of variables.
+    - It can lead to variables marked sensitive being exposed, due to the fact that static
+      evaluation of sensitive variables in module sources, versions, etc might
+      result in sensitive values being written to disk.
+    - What is the best way to tackle breaking this behavior? Should it be removed in a patch release?
+- Igor: This is an issue, but breaking behavior in a patch release is not ideal. 
+    - It might be best to fix it in a minor release.
+    - There's risk that some users consider a breaking change like this really surprising.
+- Yousif: I agree with Igor. The behavior should be addressed in a minor release.
+    - In the interim, would it be possible to emit a warning when users are using sensitive variables in contexts
+      that might expose them?
+    - Users could then be made aware of the issue and take steps to mitigate it before the fix is released.
+    - We could also consider adding a flag to opt-in to allowing sensitive variables in these contexts.
+- Christian: I'll look into adding a warning, but I'm not sure there's a sensible reason to use sensitive variables in these contexts.
+- Igor: Many community members asked for this functionality to be able to include tokens for fetching private modules.
+    - They'll rely on the ability to use sensitive variables in contexts where they might be exposed in `.terraform.lock.hcl` files.
+- Christian: That's a good point. Users might need a mechanism to opt-in to existing behavior.
+   - I'll report this issue, then communicate the plan to address it with a warning in a patch, and fix it in a minor release.
+
+#### OpenTofu Registry Policy
+
+This topic is complex, and the committee is working to finalize a policy that will be acceptable to all parties.
+
+To avoid harassment of any committee members, the comments made by individual members will not be attributed to them in the minutes.
+
+It was discussed that the policy should be clear on what the OpenTofu Steering Committee must do by law,
+and how much flexibility the committee has in making decisions.
+
+The committee agreed to revisit the topic in the following meeting.
+
 ## 2024-08-20
 
 ### Attendees
@@ -76,7 +119,7 @@ Christian: will write up a "case study" ([examples](https://buildkite.com/case-s
 
 ##### Decision:
 
-**Christian will prepare RFC for Stage 1 and send to TSC + Community via Github PR**
+**Christian will prepare RFC for Stage 1 and send to TSC + Community via GitHub PR**
 
 ## 2024-08-13
 
@@ -95,7 +138,7 @@ Christian: will write up a "case study" ([examples](https://buildkite.com/case-s
 
 - Christian: Where do we publish our governance documents?
 - Christian: Do we need to amend our governance documents before publishing them?
-- Have we defined how we manage TSC memebership?
+- Have we defined how we manage TSC membership?
 - Igor: Usually in a github repo w/ amendments and meeting notes
     - Also look at other CNCF projects
     - LF to review before publishing
@@ -325,8 +368,8 @@ At this point we need a decision from the TSC on which paths we should be invest
 
 ##### Recommendation
 
-- Preferable one officially supported backend with all neccessary functionality, for example, http backend.
-- Continoue discussion in the core team and TSC.
+- Preferable one officially supported backend with all necessary functionality, for example, http backend.
+- Continue discussion in the core team and TSC.
 
 ## 2024-07-10
 
@@ -602,7 +645,7 @@ TSC:
       1. Migration from TF has to be supported, first-class, easy for enterprise
       2. Tofu needs to provide motivation (i.e. stability, innovation, community) in addition to an on-ramp
 
-   3. A strongly opinionated/narrow vision, e.g. “we want to build for XYZ” is possibily limiting our audience for now
+   3. A strongly opinionated/narrow vision, e.g. “we want to build for XYZ” is possibly limiting our audience for now
 
 - Igor: The vision for the next year is to focus on adoption. We’ll refine for a week, if nothing else comes up, we’ll adopt this.
 
@@ -666,7 +709,7 @@ TSC:
 
 #### IBM acquisition of Hashicorp
 
-Shall we publish anything as OpenTofu regarding the acquision?
+Shall we publish anything as OpenTofu regarding the acquisition?
 
 ##### Discussion/Decision
 
@@ -871,7 +914,7 @@ https://github.com/opentofu/opentofu/issues/1328
     - Do we follow semver?
     - Consider in said strategy that there may be some perception that the release cadence of OTF is lower than that of HTF (despite OTF having more content in each) - should we have more frequent releases?
 - Continue with current versioning schema for now (next version is 1.8)
-- Open up an issue for the community to discuss wether we should change that versioning
+- Open up an issue for the community to discuss whether we should change that versioning
 - Open up an issue to track and come up with suggestion how the current or future versioning scheme will support provider constraints as support for new provider/module features are added on different version of OTF vs HTF
 
 ### Backends as Plugins

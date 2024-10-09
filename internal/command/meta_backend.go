@@ -20,7 +20,6 @@ import (
 	"strings"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 	ctyjson "github.com/zclconf/go-cty/cty/json"
 
@@ -436,7 +435,7 @@ func (m *Meta) Operation(b backend.Backend, vt arguments.ViewType, enc encryptio
 		// should always have been called earlier to prepare the "ContextOpts"
 		// for the backend anyway, so we should never actually get here in
 		// a real situation. If we do get here then the backend will inevitably
-		// fail downstream somwhere if it tries to use the empty depLocks.
+		// fail downstream somewhere if it tries to use the empty depLocks.
 		log.Printf("[WARN] Failed to load dependency locks while preparing backend operation (ignored): %s", diags.Err().Error())
 	}
 
@@ -1363,8 +1362,7 @@ func (m *Meta) backendConfigNeedsMigration(c *configs.Backend, s *legacy.Backend
 	b := f(nil) // We don't need encryption here as it's only used for config/schema
 
 	schema := b.ConfigSchema()
-	decSpec := schema.NoneRequired().DecoderSpec()
-	givenVal, diags := hcldec.Decode(c.Config, decSpec, nil)
+	givenVal, diags := c.Decode(schema)
 	if diags.HasErrors() {
 		log.Printf("[TRACE] backendConfigNeedsMigration: failed to decode given config; migration codepath must handle problem: %s", diags.Error())
 		return true // let the migration codepath deal with these errors

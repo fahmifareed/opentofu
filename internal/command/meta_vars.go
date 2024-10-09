@@ -25,6 +25,15 @@ import (
 // for root module input variables.
 const VarEnvPrefix = "TF_VAR_"
 
+// collectVariableValuesWithTests inspects the same sources of variables as
+// collectVariableValues, but also includes any autoloaded variables from the
+// given tests directory.
+func (m *Meta) collectVariableValuesWithTests(testDir string) (map[string]backend.UnparsedVariableValue, tfdiags.Diagnostics) {
+	values, diags := m.collectVariableValues()
+	diags = diags.Append(m.addVarsFromDir(testDir, values))
+	return values, diags
+}
+
 // collectVariableValues inspects the various places that root module input variable
 // values can come from and constructs a map ready to be passed to the
 // backend as part of a backend.Operation.
@@ -69,11 +78,10 @@ func (m *Meta) collectVariableValues() (map[string]backend.UnparsedVariableValue
 	}
 
 	// Next up we load implicit files from the specified directory (first root then tests dir
-	// as tests dir files have higher precendence). These files are automatically loaded if present.
+	// as tests dir files have higher precedence). These files are automatically loaded if present.
 	// There's the original terraform.tfvars (DefaultVarsFilename) along with the later-added
 	// search for all files ending in .auto.tfvars.
 	diags = diags.Append(m.addVarsFromDir(".", ret))
-	diags = diags.Append(m.addVarsFromDir("tests", ret))
 
 	// Finally we process values given explicitly on the command line, either
 	// as individual literal settings or as additional files to read.
@@ -122,6 +130,10 @@ func (m *Meta) collectVariableValues() (map[string]backend.UnparsedVariableValue
 	m.inputVariableCache = ret
 
 	return ret, diags
+}
+
+func (m *Meta) updateInputVariableCache(key string, value backend.UnparsedVariableValue) {
+	m.inputVariableCache[key] = value
 }
 
 func (m *Meta) addVarsFromDir(currDir string, ret map[string]backend.UnparsedVariableValue) tfdiags.Diagnostics {
